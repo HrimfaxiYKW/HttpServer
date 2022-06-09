@@ -35,14 +35,4 @@ scoped_guard_t<F> make_defer(F &&f) {
 #define CAT2(x, y) CAT1(x, y)
 #define defer_obj_name CAT2(defer_obj, __COUNTER__)
 #define defer(expr) auto defer_obj_name = utils::make_defer([&]() { expr; });
-
-// example:
-// void foo() {
-//     defer({
-//             defer(cout << 4 << endl);
-//             cout << 3 << endl;
-//          });
-//     cout << 1 << endl;
-//     defer(cout << 2 << endl);
-// }
 }  // namespace utils

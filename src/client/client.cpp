@@ -13,9 +13,12 @@
 #include <cstring>
 #include <iostream>
 #include "../common/utils.h"
+#include "../common/def.h"
 int main() {
   // IPV4 & TCP
   int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+  defer(close(sockfd));
+  FATAL_IF(sockfd == -1, "socket create.");
 
   struct sockaddr_in serv_addr;
   bzero(&serv_addr, sizeof(serv_addr));
@@ -23,11 +26,24 @@ int main() {
   serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
   serv_addr.sin_port = htons(8848);
 
-  int ret = connect(sockfd, reinterpret_cast<sockaddr *>(&serv_addr), sizeof(serv_addr));
-  std::cout << "connect" << ret << std::endl;
-  close(sockfd);
+  FATAL_IF(connect(sockfd, reinterpret_cast<sockaddr *>(&serv_addr), sizeof(serv_addr)) == -1, "connect fail.");
 
-  // using namespace utils;
-  defer(utils::fuck());
+  while (true) {
+    char buf[BUFFER_SIZE];
+    bzero(&buf, sizeof(buf));
+    utils::get_input(buf);
+    auto write_bytes = write(sockfd, buf, sizeof(buf));
+    FATAL_IF(write_bytes < 0, "sockfd(%d) already disconnected.", sockfd);
+
+    // clear buffer
+    bzero(&buf, sizeof(buf));
+    auto read_bytes = read(sockfd, buf, sizeof(buf));
+    INFO_IF(read_bytes > 0, "sockfd(%d) recieve:%s\n", sockfd, buf);
+    if (read_bytes == 0) {
+      LOG_WARN("server socket(%d) disconnect.", sockfd);
+      break;
+    }
+    FATAL_IF(read_bytes == -1, "read fail.");
+  }
   return 0;
 }
