@@ -28,7 +28,7 @@ int main() {
   std::cout << "connect" << ret << std::endl;
   close(sockfd);
 
-  using namespace utils;
-  defer(fuck());
+  // using namespace utils;
+  defer(utils::fuck());
   return 0;
 }
