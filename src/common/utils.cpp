@@ -1,4 +1,4 @@
 #include "utils.h"
 namespace utils {
-void fuck() { std::cout << "fuck" << std::endl; }
+void get_input(char buf[BUFFER_SIZE]) { std::cin.getline(buf, BUFFER_SIZE); }
 }  // namespace utils
