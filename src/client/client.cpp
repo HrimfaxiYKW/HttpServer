@@ -12,6 +12,8 @@
 #include <unistd.h>
 #include <cstring>
 #include <iostream>
+#include "../common/utils.h"
+#include "../common/scoped_guard.h"
 int main() {
   // IPV4 & TCP
   int sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -25,5 +27,8 @@ int main() {
   int ret = connect(sockfd, reinterpret_cast<sockaddr *>(&serv_addr), sizeof(serv_addr));
   std::cout << "connect" << ret << std::endl;
   close(sockfd);
+
+  using namespace utils;
+  defer(fuck());
   return 0;
 }
