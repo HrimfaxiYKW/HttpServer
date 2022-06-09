@@ -9,7 +9,7 @@
  *
  * Managed by Yan Kewen
  *****************************************************************************/
-
+#pragma once
 #include <iostream>
 #include <cstring>
 namespace utils {
