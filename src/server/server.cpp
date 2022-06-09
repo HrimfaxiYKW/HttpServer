@@ -34,6 +34,7 @@ int main() {
 
   // accept 是阻塞调用
   int clnt_sockfd = accept(sockfd, (sockaddr *)&clnt_addr, &clnt_addr_len);
+  defer(utils::fuck());
 
   printf("new client fd %d! IP: %s Port: %d\n", clnt_sockfd, inet_ntoa(clnt_addr.sin_addr), ntohs(clnt_addr.sin_port));
   return 0;
