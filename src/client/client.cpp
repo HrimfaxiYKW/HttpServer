@@ -13,7 +13,6 @@
 #include <cstring>
 #include <iostream>
 #include "../common/utils.h"
-#include "../common/scoped_guard.h"
 int main() {
   // IPV4 & TCP
   int sockfd = socket(AF_INET, SOCK_STREAM, 0);
