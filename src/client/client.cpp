@@ -33,7 +33,7 @@ int main() {
     char buf[BUFFER_SIZE];
     bzero(&buf, sizeof(buf));
     utils::get_input(buf);
-    auto write_bytes = write(sockfd, buf, sizeof(buf));
+    ssize_t write_bytes = write(sockfd, buf, sizeof(buf));
     FATAL_IF_WITH_CLOSE(write_bytes < 0, sockfd, "sockfd(%d) already disconnected.", sockfd);
 
     // clear buffer
@@ -44,7 +44,9 @@ int main() {
       LOG_WARN("server socket(%d) disconnect.", sockfd);
       break;
     }
+
     FATAL_IF_WITH_CLOSE(read_bytes == -1, sockfd, "read fail.");
   }
+
   return 0;
 }
