@@ -37,8 +37,8 @@
 #define FATAL_IF(value, M, arg...) \
   if (value) {                     \
     LOG_FATAL(M, ##arg);           \
-  };                               \
-  exit(EXIT_FAILURE);
+    exit(EXIT_FAILURE);            \
+  };
 
 #define ERR_IF(value, M, arg...) \
   if (value) {                   \

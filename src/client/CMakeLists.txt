@@ -9,6 +9,9 @@ aux_source_directory(. DIR_SRCS)
 
 # 生成目标
 if (${BUILD_CLIENT})
-  add_executable(client ${DIR_SRCS})
+  add_executable(client ${DIR_COMMON_SRCS} ${DIR_SRCS})
   target_link_libraries(client libutils)
+  target_link_libraries(client libinet)
+  target_link_libraries(client libsocket)
+  target_link_libraries(client libepoll)
 endif()

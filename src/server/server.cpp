@@ -18,80 +18,103 @@
 #include <errno.h>
 #include "../common/utils.h"
 #include "../common/def.h"
+#include "../common/Epoll.h"
+#include "../common/InetAddress.h"
+#include "../common/Socket.h"
+
+static int handle_read_event(const int fd) {  // process ET & nonblocking
+  int ret = ALL_OK;
+  char buf[BUFFER_SIZE];
+  while (true) {
+    bzero(&buf, sizeof(buf));
+    ssize_t bytes_read = read(fd, buf, sizeof(buf));
+    if (bytes_read > 0) {
+      LOG_INFO("msg from client fd(%d):%s", fd, buf);
+      ERR_IF(write(fd, buf, sizeof(buf)) < 0, "write back msg(%s) to fd(%d) fali", buf, fd);
+      // write 失败只打日志，始终通过读判断连接的正常性
+    } else if (bytes_read == -1 && errno == EINTR) {  // 客户端正常中断，继续读
+      LOG_INFO("continue reading.");
+    } else if (bytes_read == -1 && ((errno == EAGAIN) || (errno == EWOULDBLOCK))) {  // 读取完毕
+      LOG_INFO("read complete.");
+      break;
+    } else if (bytes_read == 0) {
+      LOG_INFO("EOF, client fd(%d) disconnected.", fd);  // EOF 断开了
+      break;
+    } else {
+      LOG_FATAL("unknonw condition bytes_read(%d).", static_cast<int>(bytes_read));
+    }
+  }
+
+  return ret;
+}
 
 int main() {
   using namespace utils;
-  int sockfd = socket(AF_INET, SOCK_STREAM, 0);
-  defer(close(sockfd));
-  FATAL_IF_WITH_CLOSE(sockfd == -1, sockfd, "socket create fail");
+  int ret = ALL_OK;
 
-  struct sockaddr_in serv_addr;
-  bzero(&serv_addr, sizeof(serv_addr));
-  serv_addr.sin_family = AF_INET;
-  serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-  serv_addr.sin_port = htons(8848);
+  InetAddress *serv_addr = new InetAddress("127.0.0.1", 8848);
+  defer(delete serv_addr);
 
-  FATAL_IF_WITH_CLOSE(bind(sockfd, (sockaddr *)&serv_addr, sizeof(serv_addr)) == -1, sockfd,
-                      "sockfd(%d) bind port(%d) fail.", sockfd, static_cast<int32_t>(serv_addr.sin_port));
+  Socket *serv_sock = new Socket();
+  defer(delete serv_sock);
+  ret = serv_sock->create();
+  FATAL_IF(ret != ALL_OK, "create ret(%d).", ret);
 
-  FATAL_IF_WITH_CLOSE(listen(sockfd, MAX_EVENTS) == -1, sockfd, "sockfd(%d) listen fali.", sockfd);
+  ret = serv_sock->bind(*serv_addr);
+  FATAL_IF(ret != ALL_OK, "bind ret(%d).", ret);
 
-  int epfd = epoll_create1(0);
-  FATAL_IF_WITH_CLOSE(epfd == -1, sockfd, "epoll create error.");
+  ret = serv_sock->listen();
+  FATAL_IF(ret != ALL_OK, "listen ret(%d)", ret);
 
-  epoll_event events[MAX_EVENTS];  // 等待队列
-  epoll_event ev;                  // 监听事件
-  bzero(&events, sizeof(events));
-  bzero(&ev, sizeof(ev));
+  serv_sock->setnonblocking();  // 采用 ET, 所以非阻塞
 
-  ev.data.fd = sockfd;
-  ev.events = EPOLLIN | EPOLLET;  // ET 模式
-  utils::setnonblocking(sockfd);  // ET 模式必须是非阻塞io
-  epoll_ctl(epfd, EPOLL_CTL_ADD, sockfd, &ev);
+  Epoll *ep = new Epoll();
+
+  ret = ep->create();
+  FATAL_IF(ret != ALL_OK, "epoll create ret(%d).", ret);
+
+  ep->add_fd(serv_sock->get_fd(), EPOLLIN | EPOLLET);
+
+  LOG_INFO("Server Init success.");
 
   while (true) {
-    int nfds = epoll_wait(epfd, events, MAX_EVENTS, -1);  // wait unlimit time
-    FATAL_IF_WITH_CLOSE(nfds == -1, sockfd, "epoll wait fail.");
+    std::vector<epoll_event> active_events;
+    ret = ep->poll(-1, active_events);
+    FATAL_IF(ret != ALL_OK, "get active events ret(%d).", ret);
 
-    for (int i = 0; i < nfds; ++i) {
-      if (events[i].data.fd == sockfd) {  // 处理新连接
-        sockaddr_in clnt_addr;
-        bzero(&clnt_addr, sizeof(clnt_addr));
-        socklen_t clnt_addr_len = sizeof(clnt_addr);
+    for (const auto &event : active_events) {
+      if (event.data.fd == serv_sock->get_fd()) {  // 新连接
+        InetAddress *clnt_addr = new InetAddress();
+        defer(delete clnt_addr);
+        Socket *clnt_sock = new Socket();
+        // defer(delete clnt_sock);
+        // 这里析构会导致 close，从而等于没建立连接。但不析构会造成内存泄漏，需要开发一个 Socket mgr 统一管理每个 Socket
+        // 的生命周期
 
-        int clnt_sockfd = accept(sockfd, (sockaddr *)&clnt_addr, &clnt_addr_len);
-        ERR_IF_WITH_CLOSE(clnt_sockfd == -1, sockfd, "socket accept error.");
-        LOG_INFO("accept new client fd(%d), IP:%s, Port:%d.", clnt_sockfd, inet_ntoa(clnt_addr.sin_addr),
-                 ntohs(clnt_addr.sin_port));
+        ret = clnt_sock->create(false, [&]() -> int {
+          int acc_fd = 0;
+          ret = serv_sock->accept(*clnt_addr, acc_fd);
+          return acc_fd;
+        }());
 
-        bzero(&ev, sizeof(ev));
-        ev.data.fd = clnt_sockfd;
-        ev.events = EPOLLIN;
-        setnonblocking(clnt_sockfd);  // 重要，必须设置成非阻塞 io
-        epoll_ctl(epfd, EPOLL_CTL_ADD, clnt_sockfd, &ev);
-      } else if (events[i].events & EPOLLIN) {  // 可读事件
-        char buf[BUFFER_SIZE];
-
-        while (true) {
-          bzero(&buf, sizeof(buf));
-          ssize_t bytes_read = read(events[i].data.fd, buf, sizeof(buf));
-          if (bytes_read > 0) {
-            LOG_INFO("msg from client fd(%d):%s", events[i].data.fd, buf);
-            ERR_IF(write(events[i].data.fd, buf, sizeof(buf)) < 0, "write back msg(%s) to fd(%d) fali", buf,
-                   events[i].data.fd);
-            // write 失败只打日志，始终通过读判断连接的正常性
-          } else if (bytes_read == -1 && errno == EINTR) {  // 客户端正常中断，继续读
-            LOG_INFO("continue reading.");
-          } else if (bytes_read == -1 && ((errno == EAGAIN) || (errno == EWOULDBLOCK))) {  // 读取完毕
-            LOG_INFO("read complete.");
-            break;
-          }
-
-          INFO_IF_WITH_CLOSE(bytes_read == 0, events[i].data.fd, "EOF, client fd(%d) disconnected.",
-                             events[i].data.fd);  // EOF 断开了
+        if (ret != ALL_OK) {
+          LOG_ERR("new client fd %d! IP: %s Port: %d", clnt_sock->get_fd(), inet_ntoa(clnt_addr->addr_.sin_addr),
+                  ntohs(clnt_addr->addr_.sin_port));
+          continue;
         }
+
+        LOG_INFO("new client fd(%d)! IP:(%s) Port:(%d)", clnt_sock->get_fd(), inet_ntoa(clnt_addr->addr_.sin_addr),
+                 ntohs(clnt_addr->addr_.sin_port));
+
+        clnt_sock->setnonblocking();
+
+        ret = ep->add_fd(clnt_sock->get_fd(), EPOLLIN | EPOLLET);
+        ERR_IF(ret != ALL_OK, "epoll add fd ret(%d).", ret);
+      } else if (event.events & EPOLLIN) {  // 可读
+        ret = handle_read_event(event.data.fd);
+        ERR_IF(ret != ALL_OK, "handle read evetn ret(%d).", ret);
       } else {
-        LOG_INFO("unknown events");
+        LOG_INFO("unknown condition.");
       }
     }
   }

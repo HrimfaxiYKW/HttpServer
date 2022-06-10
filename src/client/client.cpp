@@ -14,6 +14,7 @@
 #include <iostream>
 #include "../common/utils.h"
 #include "../common/def.h"
+#include "../common/Socket.h"
 int main() {
   // IPV4 & TCP
   int sockfd = socket(AF_INET, SOCK_STREAM, 0);
