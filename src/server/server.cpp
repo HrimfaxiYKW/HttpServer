@@ -20,7 +20,7 @@ int main() {
   using namespace utils;
   int sockfd = socket(AF_INET, SOCK_STREAM, 0);
   defer(close(sockfd));
-  FATAL_IF(sockfd == -1, "socket create.");
+  FATAL_IF_WITH_CLOSE(sockfd == -1, sockfd, "socket create fail");
 
   struct sockaddr_in serv_addr;
   bzero(&serv_addr, sizeof(serv_addr));
@@ -28,10 +28,11 @@ int main() {
   serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
   serv_addr.sin_port = htons(8848);
 
-  FATAL_IF(bind(sockfd, (sockaddr *)&serv_addr, sizeof(serv_addr)) == -1, "bind fail.");
+  FATAL_IF_WITH_CLOSE(bind(sockfd, (sockaddr *)&serv_addr, sizeof(serv_addr)) == -1, sockfd,
+                      "sockfd(%d) bind port(%d) fail.", sockfd, static_cast<int32_t>(serv_addr.sin_port));
 
   // 最大监听队列长度，默认 128
-  FATAL_IF(listen(sockfd, SOMAXCONN) == -1, "listen fail.");
+  FATAL_IF_WITH_CLOSE(listen(sockfd, SOMAXCONN) == -1, sockfd, "sockfd(%d) listen fali.", sockfd);
 
   struct sockaddr_in clnt_addr;
   socklen_t clnt_addr_len = sizeof(clnt_addr);
@@ -39,7 +40,7 @@ int main() {
 
   // accept 是阻塞调用
   int clnt_sockfd = accept(sockfd, (sockaddr *)&clnt_addr, &clnt_addr_len);
-  FATAL_IF(clnt_sockfd == -1, "socket(%d) accept.", sockfd);
+  FATAL_IF_WITH_CLOSE(clnt_sockfd == -1, sockfd, "socket(%d) accept.", sockfd);
 
   LOG_INFO("new client fd %d! IP: %s Port: %d\n", clnt_sockfd, inet_ntoa(clnt_addr.sin_addr),
            ntohs(clnt_addr.sin_port));
@@ -55,13 +56,11 @@ int main() {
       printf("message from client sockfd(%d) :%s\n", clnt_sockfd, buf);
       auto write_bytes = write(clnt_sockfd, buf, sizeof(buf));
       ERR_IF(write_bytes < 0, "write back msg(%s) fail", buf);
-    }
-
-    if (read_bytes == 0) {
+    } else if (read_bytes == 0) {
       LOG_WARN("client sockfd(%d) disconnect.", sockfd);
       break;
     }
-    FATAL_IF(read_bytes < 0, "sockfd(%d) read fail.", sockfd);
+    FATAL_IF_WITH_CLOSE(read_bytes < 0, sockfd, "sockfd(%d) read fail.", sockfd);
   }
   return 0;
 }
