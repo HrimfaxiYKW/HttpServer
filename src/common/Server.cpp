@@ -33,7 +33,14 @@ int Server::handle_read_event(const int fd) {  // process ET & nonblocking
       break;
     } else if (bytes_read == 0) {
       LOG_INFO("EOF, client fd(%d) disconnected, close it.", fd);  // EOF 断开了
-      close(fd);
+      auto it = sock_mgr_.find(fd);
+      if (it == sock_mgr_.end()) {
+        LOG_INFO("already close fd(%d)",fd);
+        continue;
+      }
+      
+      delete it->second;
+      sock_mgr_.erase(it);
       break;
     } else {
       LOG_FATAL("unknonw condition bytes_read(%d).", static_cast<int>(bytes_read));
@@ -61,7 +68,7 @@ int Server::new_connection(Socket& serv_sock) {
   }
 
   Socket *clnt_sock = new Socket();
-  ret = clnt_sock->create(false, clnt_fd);
+  ret = clnt_sock->create(sock_mgr_,false, clnt_fd);
   if (ret != ALL_OK) {
     LOG_ERR("server create client socket cltn_fd(%d) ret(%d)",clnt_fd, ret);
     return ret;
@@ -95,9 +102,9 @@ int Server::init() {
   int ret = ALL_OK;
 
   InetAddress *serv_addr = new InetAddress("127.0.0.1", 8848);
-  Socket *serv_sock = new Socket(); // 未释放，存在内存泄漏问题
+  Socket *serv_sock = new Socket();
 
-  serv_sock->create();
+  serv_sock->create(sock_mgr_,true);
   FATAL_IF(ret != ALL_OK, "create ret(%d).", ret);
 
   ret = serv_sock->bind(*serv_addr);

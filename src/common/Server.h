@@ -2,13 +2,14 @@
  * @Author: Hrimfaxi 851957818@qq.com
  * @Date: 2022-06-16 12:34:08
  * @LastEditors: Hrimfaxi 851957818@qq.com
- * @LastEditTime: 2022-06-16 14:42:34
+ * @LastEditTime: 2022-06-16 16:34:29
  * @FilePath: /yankewen/code/HttpServer/src/common/Server.h
  * @Description: 
  * 
  * Copyright (c) 2022 by Hrimfaxi 851957818@qq.com, All Rights Reserved. 
  */
 #pragma once
+#include <map>
 
 class EventLoop;
 class Socket;
@@ -16,6 +17,8 @@ class Server
 {
 private:
     EventLoop *loop_;
+    // pair<fd, Socket*>
+    std::map<int, Socket*> sock_mgr_;
 public:
     Server(EventLoop* loop);
     ~Server();

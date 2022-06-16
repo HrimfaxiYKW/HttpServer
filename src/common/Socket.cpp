@@ -2,7 +2,7 @@
  * @Author: Hrimfaxi 851957818@qq.com
  * @Date: 2022-06-14 20:11:14
  * @LastEditors: Hrimfaxi 851957818@qq.com
- * @LastEditTime: 2022-06-16 16:07:03
+ * @LastEditTime: 2022-06-16 16:51:19
  * @FilePath: /yankewen/code/HttpServer/src/common/Socket.cpp
  * @Description: Class Socket
  *
@@ -19,17 +19,18 @@ Socket::Socket() : fd_(-1) {}
 Socket::~Socket() {
   LOG_INFO("close sockfd(%d).", fd_);
   if (fd_ >= 0) {
-    // close(fd_);
+    close(fd_);
   }
 }
 
-int Socket::create(bool create_new, const int fd) {
+int Socket::create(std::map<int, Socket*>& sock_mgr_, bool create_new, const int fd) {
   fd_ = create_new ? socket(AF_INET, SOCK_STREAM, 0) : fd;
   if (fd_ < 0) {
     LOG_ERR("creat sockfd(%d).", fd_);
     return SOCKET_CREATE_ERROR;
   }
 
+  sock_mgr_[fd] = this;
   LOG_INFO("create sockfd(%d).", fd_);
   return ALL_OK;
 }
