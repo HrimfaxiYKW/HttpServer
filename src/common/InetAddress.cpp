@@ -1,14 +1,13 @@
-/*****************************************************************************
- * Copyright (c) 2022, Yan Kewen. All rights reserved.
+/*
+ * @Author: Hrimfaxi 851957818@qq.com
+ * @Date: 2022-06-14 20:10:13
+ * @LastEditors: Hrimfaxi 851957818@qq.com
+ * @LastEditTime: 2022-06-14 20:10:13
+ * @FilePath: /yankewen/code/HttpServer/src/common/InetAddress.cpp
+ * @Description:class InetAddress
  *
- * @file InetAddress.cpp
- *
- * Define class InetAddress
- *
- * Created by Yan Kewen (ykwhrimfaxi@gmail.com), 2022/06/10.
- *
- * Managed by Yan Kewen
- *****************************************************************************/
+ * Copyright (c) 2022 by Hrimfaxi 851957818@qq.com, All Rights Reserved.
+ */
 #include "InetAddress.h"
 
 InetAddress::InetAddress() : addr_len_(sizeof(addr_)) { bzero(&addr_, sizeof(addr_)); }

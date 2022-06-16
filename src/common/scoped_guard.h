@@ -1,14 +1,13 @@
-/*****************************************************************************
- * Copyright (c) 2022, Yan Kewen. All rights reserved.
+/*
+ * @Author: Hrimfaxi 851957818@qq.com
+ * @Date: 2022-06-14 20:10:49
+ * @LastEditors: Hrimfaxi 851957818@qq.com
+ * @LastEditTime: 2022-06-14 20:10:49
+ * @FilePath: /yankewen/code/HttpServer/src/common/scoped_guard.h
+ * @Description: defer function on language level support
  *
- * @file scoped_guard.h
- *
- * defer function on language level support
- *
- * Created by Yan Kewen (ykwhrimfaxi@gmail.com), 2022/06/09.
- *
- * Managed by Yan Kewen
- *****************************************************************************/
+ * Copyright (c) 2022 by Hrimfaxi 851957818@qq.com, All Rights Reserved.
+ */
 #pragma once
 #include <utility>
 

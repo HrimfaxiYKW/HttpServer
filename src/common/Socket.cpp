@@ -1,14 +1,13 @@
-/*****************************************************************************
- * Copyright (c) 2022, Yan Kewen. All rights reserved.
+/*
+ * @Author: Hrimfaxi 851957818@qq.com
+ * @Date: 2022-06-14 20:11:14
+ * @LastEditors: Hrimfaxi 851957818@qq.com
+ * @LastEditTime: 2022-06-16 16:51:19
+ * @FilePath: /yankewen/code/HttpServer/src/common/Socket.cpp
+ * @Description: Class Socket
  *
- * @file Socket.cpp
- *
- * Define class Socket
- *
- * Created by Yan Kewen (ykwhrimfaxi@gmail.com), 2022/06/10.
- *
- * Managed by Yan Kewen
- *****************************************************************************/
+ * Copyright (c) 2022 by Hrimfaxi 851957818@qq.com, All Rights Reserved.
+ */
 #include "Socket.h"
 #include "InetAddress.h"
 #include "../common/utils.h"
@@ -24,13 +23,14 @@ Socket::~Socket() {
   }
 }
 
-int Socket::create(bool create_new, const int fd) {
+int Socket::create(std::map<int, Socket*>& sock_mgr_, bool create_new, const int fd) {
   fd_ = create_new ? socket(AF_INET, SOCK_STREAM, 0) : fd;
   if (fd_ < 0) {
     LOG_ERR("creat sockfd(%d).", fd_);
     return SOCKET_CREATE_ERROR;
   }
 
+  sock_mgr_[fd] = this;
   LOG_INFO("create sockfd(%d).", fd_);
   return ALL_OK;
 }
