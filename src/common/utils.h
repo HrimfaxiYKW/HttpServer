@@ -1,14 +1,13 @@
-/*****************************************************************************
- * Copyright (c) 2022, Yan Kewen. All rights reserved.
+/*
+ * @Author: Hrimfaxi 851957818@qq.com
+ * @Date: 2022-06-14 20:12:17
+ * @LastEditors: Hrimfaxi 851957818@qq.com
+ * @LastEditTime: 2022-06-14 20:18:18
+ * @FilePath: /yankewen/code/HttpServer/src/common/utils.h
+ * @Description: 业务无关的独立功能函数
  *
- * @file utils.h
- *
- * some common utils
- *
- * Created by Yan Kewen (ykwhrimfaxi@gmail.com), 2022/06/09.
- *
- * Managed by Yan Kewen
- *****************************************************************************/
+ * Copyright (c) 2022 by Hrimfaxi 851957818@qq.com, All Rights Reserved.
+ */
 #pragma once
 #include <iostream>
 #include <cstring>

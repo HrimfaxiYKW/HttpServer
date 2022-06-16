@@ -1,14 +1,13 @@
-/*****************************************************************************
- * Copyright (c) 2022, Yan Kewen. All rights reserved.
+/*
+ * @Author: Hrimfaxi 851957818@qq.com
+ * @Date: 2022-06-14 20:11:14
+ * @LastEditors: Hrimfaxi 851957818@qq.com
+ * @LastEditTime: 2022-06-16 16:07:03
+ * @FilePath: /yankewen/code/HttpServer/src/common/Socket.cpp
+ * @Description: Class Socket
  *
- * @file Socket.cpp
- *
- * Define class Socket
- *
- * Created by Yan Kewen (ykwhrimfaxi@gmail.com), 2022/06/10.
- *
- * Managed by Yan Kewen
- *****************************************************************************/
+ * Copyright (c) 2022 by Hrimfaxi 851957818@qq.com, All Rights Reserved.
+ */
 #include "Socket.h"
 #include "InetAddress.h"
 #include "../common/utils.h"
@@ -20,7 +19,7 @@ Socket::Socket() : fd_(-1) {}
 Socket::~Socket() {
   LOG_INFO("close sockfd(%d).", fd_);
   if (fd_ >= 0) {
-    close(fd_);
+    // close(fd_);
   }
 }
 
