@@ -2,7 +2,7 @@
  * @Author: Hrimfaxi 851957818@qq.com
  * @Date: 2022-06-14 20:11:14
  * @LastEditors: Hrimfaxi 851957818@qq.com
- * @LastEditTime: 2022-06-16 16:51:19
+ * @LastEditTime: 2022-06-22 16:42:49
  * @FilePath: /yankewen/code/HttpServer/src/common/Socket.cpp
  * @Description: Class Socket
  *
@@ -10,7 +10,8 @@
  */
 #include "Socket.h"
 #include "InetAddress.h"
-#include "../common/utils.h"
+#include "utils.h"
+#include "SockMgr.h"
 #include <unistd.h>
 #include <sys/socket.h>
 
@@ -23,14 +24,14 @@ Socket::~Socket() {
   }
 }
 
-int Socket::create(std::map<int, Socket*>& sock_mgr_, bool create_new, const int fd) {
+int Socket::create(SockMgr *sock_mgr_, bool create_new, const int fd) {
   fd_ = create_new ? socket(AF_INET, SOCK_STREAM, 0) : fd;
   if (fd_ < 0) {
     LOG_ERR("creat sockfd(%d).", fd_);
     return SOCKET_CREATE_ERROR;
   }
 
-  sock_mgr_[fd] = this;
+  sock_mgr_->add_socket(fd, this);
   LOG_INFO("create sockfd(%d).", fd_);
   return ALL_OK;
 }
