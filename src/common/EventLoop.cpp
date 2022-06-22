@@ -2,7 +2,7 @@
  * @Author: Hrimfaxi 851957818@qq.com
  * @Date: 2022-06-14 20:23:01
  * @LastEditors: Hrimfaxi 851957818@qq.com
- * @LastEditTime: 2022-06-16 16:09:29
+ * @LastEditTime: 2022-06-22 15:10:53
  * @FilePath: /yankewen/code/HttpServer/src/common/EventLoop.cpp
  * @Description:
  *
@@ -14,13 +14,17 @@
 #include "utils.h"
 #include <vector>
 
-EventLoop::EventLoop() : ep_(nullptr), quit_(false) { 
-  ep_ = new Epoll(); 
-  int ret = ep_->create();
-  FATAL_IF(ret != ALL_OK,"epoll create ret(%d)",ret);
-}
+EventLoop::EventLoop() : ep_(nullptr), quit_(false) {}
 
 EventLoop::~EventLoop() { delete ep_; }
+
+int EventLoop::init() {
+  ep_ = new Epoll();
+  int ret = ep_->create();
+  FATAL_IF(ret != ALL_OK, "epoll create ret(%d)", ret);
+
+  return ALL_OK;
+}
 
 void EventLoop::loop() {
   while (!quit_) {
@@ -29,9 +33,9 @@ void EventLoop::loop() {
     ERR_IF(ret != ALL_OK, "epoll loop ret(%d).", ret);
 
     for (auto it = chs.begin(); it != chs.end(); ++it) {
-      LOG_INFO("start to handle fd(%d)",(*it)->get_fd());
+      LOG_INFO("start to handle fd(%d)", (*it)->get_fd());
       ret = (*it)->handle_event();
-      ERR_IF(ret != ALL_OK, "handle event fd(%d) ret(%d)",(*it)->get_fd(), ret);
+      ERR_IF(ret != ALL_OK, "handle event fd(%d) ret(%d)", (*it)->get_fd(), ret);
     }
   }
 }

@@ -2,7 +2,7 @@
  * @Author: Hrimfaxi 851957818@qq.com
  * @Date: 2022-06-14 20:22:40
  * @LastEditors: Hrimfaxi 851957818@qq.com
- * @LastEditTime: 2022-06-16 11:47:15
+ * @LastEditTime: 2022-06-22 15:09:54
  * @FilePath: /yankewen/code/HttpServer/src/common/EventLoop.h
  * @Description: 封装一个 EventLoop 类，来实现对 epoll 的循环访问
  *
@@ -20,6 +20,7 @@ class EventLoop {
   EventLoop();
   ~EventLoop();
 
+  int init();
   void loop();
   int update_channel(Channel *);
 };

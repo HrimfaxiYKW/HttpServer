@@ -2,7 +2,7 @@
  * @Author: Hrimfaxi 851957818@qq.com
  * @Date: 2022-06-14 20:09:33
  * @LastEditors: Hrimfaxi 851957818@qq.com
- * @LastEditTime: 2022-06-16 15:48:36
+ * @LastEditTime: 2022-06-22 14:54:41
  * @FilePath: /yankewen/code/HttpServer/src/common/Epoll.cpp
  * @Description: class Epoll
  *
@@ -24,7 +24,7 @@ Epoll::~Epoll() {
   }
 
   delete[] events_;
-  LOG_INFO("close epfd(%d)",epfd_);
+  LOG_INFO("close epfd(%d)", epfd_);
 }
 
 int Epoll::create() {
@@ -87,7 +87,7 @@ int Epoll::update_channel(Channel *channel) {
   if (!channel->get_in_epoll()) {
     ret = epoll_ctl(epfd_, EPOLL_CTL_ADD, fd, &ev);
     if (ret == -1) {
-      LOG_ERR("epoll add epfd(%d) fd(%d).",epfd_, fd);
+      LOG_ERR("epoll add epfd(%d) fd(%d).", epfd_, fd);
       return UPDATE_CHANNEL_ERROR;
     }
 
